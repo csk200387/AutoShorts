@@ -1,0 +1,6 @@
+.env
+autoshorts/
+src/__pycache__/
+serviceAccount.json
+client_secret.json
+src/upload.py-oauth2.json

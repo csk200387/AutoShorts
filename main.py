@@ -1,0 +1,44 @@
+import os
+import discord
+from dotenv import load_dotenv
+from src.download import download
+import time
+
+load_dotenv()
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
+intents = discord.Intents.default()
+# if you don't want all intents you can do discord.Intents.default()
+client = discord.Client(intents=intents)
+tree = discord.app_commands.CommandTree(client)
+
+@client.event
+async def on_ready():
+    # await client.change_presence(status=discord.Status.online, activity=discord.Game(name="/ 로 봇을 사용하세요"))
+    await client.change_presence(status=discord.Status.online, activity=discord.Game(name="AutoShorts Ready"))
+    await tree.sync()
+    print("Bot is Ready.")
+
+
+@tree.command(name="upload", description="동영상 업로드")
+async def slash_command(interaction: discord.Interaction, url:str):
+    await interaction.response.defer()
+    msg = await interaction.followup.send("다운로드 중...")
+    videoid = download(url)
+
+
+    await msg.edit(content=f"다운로드 완료. ID : {videoid}\n유튜브로 업로드중...")
+
+    with open("src/video_nums", "r") as f:
+        partnum = int(f.read())
+    with open("src/video_nums", "w") as f:
+        f.write(str(partnum+1))
+
+    os.system(f'python3 src/upload.py --file="{videoid}.webm" --title="Quick Dopamine Hits: Funny Memes, Part {partnum}" --description="#shorts #memes" --keywords="funny, memes, shorts" --category="22" --privacyStatus="public" --noauth_local_webserver')
+
+
+    await msg.edit(content=f"꺼억~ 업로드 완료. 감사합니다.")
+    os.remove(f"{videoid}.webm")
+
+
+client.run(DISCORD_TOKEN)
